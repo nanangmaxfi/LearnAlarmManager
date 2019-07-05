@@ -76,6 +76,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         Toast.makeText(context, "One time alarm set up", Toast.LENGTH_SHORT).show();
     }
 
+    private String DATE_FORMAT = "yyyy-MM-dd";
+    private String TIME_FORMAT = "HH:mm";
+
     public boolean isDateInvalid(String date, String format) {
         try {
             DateFormat df = new SimpleDateFormat(format, Locale.getDefault());
@@ -118,7 +121,22 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
     public void setRepeatingAlarm(Context context, String type, String time, String message){
+        if (isDateInvalid(time, TIME_FORMAT)) return;
 
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        intent.putExtra(EXTRA_MESSAGE, message);
+        intent.putExtra(EXTRA_TYPE, type);
+        String timeArray[] = time.split(":");
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeArray[0]));
+        calendar.set(Calendar.MINUTE, Integer.parseInt(timeArray[1]));
+        calendar.set(Calendar.SECOND, 0);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, ID_REPEATING, intent, 0);
+        if (alarmManager != null) {
+            alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+        }
+        Toast.makeText(context, "Repeating alarm set up", Toast.LENGTH_SHORT).show();
     }
 
 }
